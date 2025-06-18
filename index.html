@@ -176,7 +176,7 @@
   <div id="distance">Distance: 0.00m</div>
 </div>
 
-<audio id="quack-sound" src="quack.mp3" preload="auto" volume="0.25"></audio>
+<audio id="quack-sound" src="quack.mp3" preload="auto" volume="0.5"></audio>
 
 <script>
   const duck = document.getElementById("duck");
@@ -233,9 +233,9 @@
   function syncDuckToDistance() {
     const left = distance * pixelsPerMeter;
     const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
-    world.style.width = Math.max(world.offsetWidth, left + window.innerWidth) + "px"; // ✅ 확장
+    world.style.width = Math.max(world.offsetWidth, left + window.innerWidth) + "px";
     world.style.transform = `translateX(-${scrollOffset}px)`;
-    duck.style.transform = `translateX(${left - scrollOffset}px)`;
+    duck.style.left = (left - scrollOffset) + "px"; // ✅ 고정 좌표 사용
   }
 
   function updateUI() {
