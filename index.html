@@ -181,14 +181,14 @@
       updateUI();
     }
 
-    supa.channel("duck_state")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "duck_state", filter: "id=eq.global-duck" }, payload => {
+    supa.channel("silly2")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "silly2", filter: "id=eq.global-duck" }, payload => {
         handleRemoteUpdate(payload.new.distance);
       })
       .subscribe();
 
     (async () => {
-      const { data } = await supa.from("duck_state").select("distance").eq("id", "global-duck").single();
+      const { data } = await supa.from("silly2").select("distance").eq("id", "global-duck").single();
       if (data) handleRemoteUpdate(data.distance);
     })();
 
@@ -210,7 +210,7 @@
         if (i >= frames.length) {
           clearInterval(interval);
           isAnimating = false;
-          supa.from("duck_state").update({ distance: supabase.increment(stepMeters) }).eq("id", "global-duck");
+          supa.from("silly2").update({ distance: supabase.increment(stepMeters) }).eq("id", "global-duck");
           duck.src = frames[0];
 
           if (duck.getBoundingClientRect().right >= window.innerWidth - 20) {
