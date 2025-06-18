@@ -1,0 +1,478 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scrolling Duck World</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(to top, #f7d488, #fceabb);
+      overflow: hidden;
+    }
+    .viewport {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 300px;
+  width: 100vw;
+  background: linear-gradient(to top, #f7d488, #fceabb);
+  overflow: hidden;
+
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    .world {
+      width: 5000px;
+      height: 100%;
+      position: relative;
+      transition: transform 1s ease;
+    }
+    .ground {
+  height: 100vh;
+  background-size: auto 200px;
+
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 200px;
+      background: url('ground_tile.png') repeat-x;
+      background-size: contain;
+    }
+    #duck {
+      position: fixed;
+      bottom: 100px;
+      left: 20px;
+      width: 100px;
+      image-rendering: pixelated;
+    }
+    #ui {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-family: monospace;
+      font-size: 16px;
+      z-index: 10;
+    }
+  
+    .flag {
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  bottom: 300px;
+  width: 60px;
+  height: 60px;
+  background: yellow;
+  color: black;
+  border: 2px solid red;
+  font-size: 14px;
+  font-family: monospace;
+  text-align: center;
+  padding-top: 20px;
+  z-index: 999;
+
+      position: fixed;
+      bottom: 200px;
+      width: 50px;
+      height: 50px;
+      background: red;
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      font-family: monospace;
+      padding-top: 15px;
+      border-radius: 5px;
+    }
+
+
+
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+.flag.visible {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+#floating-text {
+  position: fixed;
+  display: none;
+  font-size: 24px;
+  color: gold;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 9999;
+}
+</style>
+
+
+</head>
+<body>
+
+  <div class="viewport">
+    <div class="world" id="world">
+      <div class="ground"></div>
+      <img id="duck" src="frames/frame_00_delay-0.04s-removebg-preview.png" alt="duck" />
+    
+      <!-- Flags -->
+      <div class="flag" style="left: 2000px;">100m</div>
+      <div class="flag" style="left: 4000px;">200m</div>
+      <div class="flag" style="left: 6000px;">300m</div>
+    
+    <div id="floating-text">+100m</div>
+  </div>
+</div>
+
+
+  <div id="ui">
+    <div id="distance">Distance: 0.00m
+      <!-- Flags -->
+      <div class="flag" style="left: 2000px;">100m</div>
+      <div class="flag" style="left: 4000px;">200m</div>
+      <div class="flag" style="left: 6000px;">300m</div>
+    
+    <div id="floating-text">+100m</div>
+  </div>
+</div>
+
+
+
+  <script>
+    const duck = document.getElementById("duck");
+    const world = document.getElementById("world");
+    const distanceText = document.getElementById("distance");
+
+    const frames = [
+      "frames/frame_00_delay-0.04s-removebg-preview.png",
+      "frames/frame_01_delay-0.04s-removebg-preview.png",
+      "frames/frame_02_delay-0.05s-removebg-preview.png",
+      "frames/frame_03_delay-0.04s-removebg-preview.png",
+      "frames/frame_04_delay-0.04s-removebg-preview.png",
+      "frames/frame_05_delay-0.04s-removebg-preview.png",
+      "frames/frame_06_delay-0.04s-removebg-preview.png",
+      "frames/frame_07_delay-0.04s-removebg-preview.png",
+      "frames/frame_08_delay-0.05s-removebg-preview.png",
+      "frames/frame_09_delay-0.04s-removebg-preview.png",
+      "frames/frame_10_delay-0.04s-removebg-preview.png",
+      "frames/frame_11_delay-0.04s-removebg-preview.png"
+    ];
+
+    let isAnimating = false;
+    let distance = 0;
+    const stepMeters = 0.05;
+    const stepPixels = 10;
+    let scrollX = 0;
+
+    function updateUI() {
+      distanceText.innerText = `Distance: ${distance.toFixed(2)}m`;
+    }
+
+    function playFullCycleAndMove() {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      let i = 0;
+      const stepPerFrame = stepPixels / frames.length;
+
+      const interval = setInterval(() => {
+        duck.src = frames[i];
+        duck.style.left = (duck.offsetLeft + stepPerFrame) + "px";
+        i++;
+        if (i >= frames.length) {
+          clearInterval(interval);
+          isAnimating = false;
+          distance += stepMeters;
+          updateUI();
+          checkAndGenerateFlag(distance);
+          if (Math.floor(distance) % 100 === 0 && Math.abs(Math.round(distance * 100) % 10000) < 1) {
+            const float = document.getElementById("floating-text");
+            float.innerText = `+${Math.floor(distance)}m`;
+            float.style.left = duck.style.left;
+            float.style.top = "180px";
+            float.style.display = "block";
+            float.style.opacity = 1;
+            float.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+            float.style.transform = "translateY(-20px)";
+            setTimeout(() => { float.style.opacity = 0; }, 400);
+            setTimeout(() => { float.style.display = "none"; }, 700);
+          }
+          updateFlagsVisibility();
+          checkAndGenerateFlag(distance);
+          if (Math.floor(distance) % 100 === 0 && Math.abs(Math.round(distance * 100) % 10000) < 1) {
+            const float = document.getElementById("floating-text");
+            float.innerText = `+${Math.floor(distance)}m`;
+            float.style.left = duck.style.left;
+            float.style.top = "180px";
+            float.style.display = "block";
+            float.style.opacity = 1;
+            float.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+            float.style.transform = "translateY(-20px)";
+            setTimeout(() => { float.style.opacity = 0; }, 400);
+            setTimeout(() => { float.style.display = "none"; }, 700);
+          }
+          duck.src = frames[0];
+
+          if (duck.getBoundingClientRect().right >= window.innerWidth - 20) {
+            scrollX += window.innerWidth;
+            const newWorldWidth = scrollX + window.innerWidth;
+            world.style.width = newWorldWidth + "px";
+            document.querySelector(".ground").style.width = newWorldWidth + "px";
+            world.style.transform = `translateX(-${scrollX}px)`;
+            duck.style.left = (scrollX + 20) + "px";
+          }
+        }
+      }, 30);
+    }
+
+    
+document.addEventListener("click", () => {
+  const q = document.getElementById("quack-sound"); q.volume = 0.5; q.play();
+  
+  const duck = document.getElementById("duck");
+  playFullCycleAndMove();
+
+});
+
+  
+const pixelsPerMeter = 20;
+let flags = new Set();
+
+function createFlagAt(distanceMeters) {
+  if (flags.has(distanceMeters)) return;
+  flags.add(distanceMeters);
+
+  const flag = document.createElement("div");
+  flag.className = "flag";
+  flag.innerText = `${distanceMeters}m`;
+  flag.style.left = `${distanceMeters * pixelsPerMeter}px`;
+  document.querySelector(".world").appendChild(flag);
+}
+
+// check and generate flag during walking
+function checkAndGenerateFlag(currentDistance) {
+  const rounded = Math.floor(currentDistance);
+  if (rounded % 100 === 0) {
+    createFlagAt(rounded);
+  }
+}
+
+function updateFlagsVisibility() {
+  const flagsOnPage = document.querySelectorAll('.flag');
+  const duckX = parseInt(duck.style.left);
+  flagsOnPage.forEach(flag => {
+    const flagX = parseInt(flag.style.left);
+    if (Math.abs(flagX - duckX) < 200) {
+      flag.classList.add("visible");
+    } else {
+      flag.classList.remove("visible");
+    }
+  });
+}
+
+
+const degenQuotes = [
+  "All in $SILLY!",
+  "$SILLY to the moon!",
+  "Diamond hands $SILLY",
+  "HODL $SILLY or die tryin'",
+  "Wen $SILLY listing?",
+  "Paper hands fear $SILLY",
+  "Full Degen on $SILLY",
+  "$SILLY max bid",
+  "Next pump is $SILLY",
+  "I just bought $SILLY again",
+  "$SILLY got me rekt",
+  "$SILLY bags never sell",
+  "Snipe the $SILLY dip",
+  "$SILLY chart broke again",
+  "Giga pump $SILLY",
+  "Liquidity? Just $SILLY",
+  "$SILLY millionaires loading",
+  "Airdrop for $SILLY when?",
+  "$SILLY vibes only",
+  "Snipe, dump, repeat — $SILLY",
+  "Degen fuel = $SILLY",
+  "$SILLY is culture",
+  "Shill harder, $SILLY faster",
+  "New ATH for $SILLY",
+  "$SILLY floor swept",
+  "Alpha: it's $SILLY szn",
+  "Exit liquidity loves $SILLY",
+  "Next Pepe? Nah, $SILLY",
+  "$SILLY is life",
+  "Rebuying $SILLY like a champ",
+  "Chart god bless $SILLY",
+  "We printin’ $SILLY",
+  "$SILLY makes me whole",
+  "Imagine not holding $SILLY",
+  "$SILLY is inevitable",
+  "Diamond bags $SILLY",
+  "No utility, just $SILLY",
+  "FOMO into $SILLY complete",
+  "Minted $SILLY, never looked back",
+  "You slept on $SILLY?",
+  "Staking $SILLY in my dreams",
+  "$SILLY gang strong",
+  "$SILLY will rise again",
+  "Flippening starts with $SILLY",
+  "$SILLY changed my life",
+  "$SILLY memes pay rent",
+  "$SILLY whales lurking",
+  "I breathe $SILLY",
+  "Meme first, $SILLY forever",
+  "$SILLY bottom confirmed?",
+  "$SILLY liquidity attack",
+  "$SILLY go up",
+  "$SILLY, but coded in hope",
+  "Degens only love $SILLY",
+  "Dev left? Still holding $SILLY",
+  "Don’t fade $SILLY",
+  "$SILLY = freedom",
+  "Buying $SILLY for grandma",
+  "Who needs sleep when it’s $SILLY o’clock?",
+  "WAGMI with $SILLY",
+  "Bag check: 100% $SILLY",
+  "Nothing left but $SILLY",
+  "$SILLY degen deluxe",
+  "Burn the chart, it’s $SILLY time",
+  "I study $SILLY patterns now",
+  "$SILLY is my personality",
+  "$SILLY flipping ETH when?",
+  "Lost my house, kept my $SILLY",
+  "Even my dog holds $SILLY",
+  "$SILLY pump confirmed",
+  "$SILLY makes it all worth it",
+  "Reality is optional with $SILLY",
+  "$SILLY isn’t a coin, it’s a way of life",
+  "Don’t need alpha, I have $SILLY",
+  "$SILLY: trust the process",
+  "$SILLY or bust",
+  "Made it? Thank $SILLY",
+  "$SILLY doesn't sleep",
+  "Chart broken = $SILLY rising",
+  "$SILLY trades itself",
+  "$SILLY war room open",
+  "$SILLY and chill",
+  "Caffeine + $SILLY = LFG",
+  "$SILLY is hope",
+  "No roadmap, just $SILLY",
+  "$SILLY post-launch enlightenment",
+  "$SILLY is still early",
+  "$SILLY lords assemble",
+  "They faded $SILLY — mistake",
+  "$SILLY stakers don’t blink",
+  "Bought $SILLY again lol",
+  "There is no exit from $SILLY",
+  "Bag full of $SILLY",
+  "Eating ramen, holding $SILLY",
+  "$SILLY is inevitable",
+  "$SILLY will outlive us",
+  "$SILLY mind virus installed",
+  "$SILLY is the way",
+  "$SILLY cultist mode",
+  "Lurking for $SILLY entries",
+  "Printing $SILLY like mad",
+  "$SILLY = modern art",
+  "$SILLY reborn again",
+  "$SILLY fueled my divorce",
+  "2nd mortgage for $SILLY",
+  "Minted $SILLY — GG",
+  "Never selling $SILLY",
+  "$SILLY supremacy declared",
+  "Woke up and bought $SILLY",
+  "$SILLY staked and cooked",
+  "$SILLY shock incoming",
+  "$SILLY is a verb now",
+  "Rugged but reentered $SILLY",
+  "$SILLY DAO = destiny",
+  "$SILLY 10x speedrun",
+  "$SILLY fix my life",
+  "Holding $SILLY til next cycle",
+  "$SILLY death spiral or greatness",
+  "$SILLY live on stream",
+  "$SILLY alpha premium",
+  "$SILLY farms memes",
+  "$SILLY for president",
+  "Governance? Nah, just $SILLY",
+  "Gas fee? Not on $SILLY",
+  "$SILLY tattoo when?",
+  "Wake up → $SILLY",
+  "Flip leverage $SILLY",
+  "Billionaire? Not yet — but $SILLY",
+  "$SILLY copium loading",
+  "My job is $SILLY",
+  "$SILLY is generational",
+  "Charts lie, $SILLY real",
+  "$SILLY bag protector",
+  "$SILLY MVP of my portfolio",
+  "Deploying memes to $SILLY",
+  "$SILLY weekly sermon",
+  "Just another $SILLY believer",
+  "Sleep tight, dream of $SILLY",
+  "$SILLY gives me hope",
+  "$SILLY over therapy",
+  "Everything’s fine, I have $SILLY",
+  "$SILLY knows",
+  "Heard voices? It was $SILLY",
+  "$SILLY rules all",
+  "$SILLY price irrelevant",
+  "All memes lead to $SILLY",
+  "$SILLY forever loading",
+  "$SILLY whisper network",
+  "Felt cute, bought $SILLY",
+  "$SILLY says relax",
+  "$SILLY withdrawals real",
+  "Max mint on $SILLY",
+  "Only $SILLY remains",
+  "$SILLY prophecy fulfilled",
+  "Wallet: 1 — $SILLY",
+  "$SILLY you later"
+];
+
+
+function showSpeechBubble() {
+  const quote = degenQuotes[Math.floor(Math.random() * degenQuotes.length)];
+  const bubble = document.createElement("div");
+  bubble.innerText = quote;
+  bubble.style.position = "absolute";
+  bubble.style.left = duck.style.left;
+  bubble.style.bottom = "250px";
+  bubble.style.background = "white";
+  bubble.style.color = "black";
+  bubble.style.padding = "4px 8px";
+  bubble.style.borderRadius = "10px";
+  bubble.style.fontSize = "12px";
+  bubble.style.fontFamily = "monospace";
+  bubble.style.zIndex = 1000;
+  bubble.style.maxWidth = "180px";
+  bubble.style.whiteSpace = "normal";
+  bubble.style.textAlign = "center";
+  bubble.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+  document.querySelector(".world").appendChild(bubble);
+  setTimeout(() => bubble.remove(), 2000);
+}
+
+// Hook into click
+document.addEventListener("click", () => {
+  document.getElementById("quack-sound").play();
+  if (Math.random() < 0.02) showSpeechBubble(); // ~1 in 50 chance
+  playFullCycleAndMove();
+});
+</script>
+
+
+
+
+
+
+  <audio id="quack-sound" src="quack.mp3" preload="auto" volume="0.5"></audio>
+</body>
+
+</html>
