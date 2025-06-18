@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,29 +10,20 @@
       overflow: hidden;
     }
     .viewport {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  height: 300px;
-  width: 100vw;
-  background: linear-gradient(to top, #f7d488, #fceabb);
-  overflow: hidden;
-
-      width: 100vw;
+      position: fixed;
+      bottom: 0;
+      left: 0;
       height: 100vh;
+      width: 100vw;
       overflow: hidden;
       position: relative;
     }
     .world {
-      width: 5000px;
       height: 100%;
       position: relative;
-      transition: transform 1s ease;
+      transition: transform 0.5s ease;
     }
     .ground {
-  height: 100vh;
-  background-size: auto 200px;
-
       position: fixed;
       bottom: 0;
       width: 100%;
@@ -42,9 +32,8 @@
       background-size: contain;
     }
     #duck {
-      position: fixed;
+      position: absolute;
       bottom: 100px;
-      left: 20px;
       width: 100px;
       image-rendering: pixelated;
     }
@@ -57,416 +46,147 @@
       font-size: 16px;
       z-index: 10;
     }
-  
     .flag {
-  opacity: 0;
-  transform: scale(0.6);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  bottom: 300px;
-  width: 60px;
-  height: 60px;
-  background: yellow;
-  color: black;
-  border: 2px solid red;
-  font-size: 14px;
-  font-family: monospace;
-  text-align: center;
-  padding-top: 20px;
-  z-index: 999;
-
-      position: fixed;
-      bottom: 200px;
-      width: 50px;
-      height: 50px;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      bottom: 300px;
+      width: 60px;
+      height: 60px;
       background: red;
       color: white;
+      border: 2px solid red;
       font-size: 12px;
-      text-align: center;
       font-family: monospace;
+      text-align: center;
       padding-top: 15px;
+      z-index: 999;
+      position: absolute;
       border-radius: 5px;
     }
-
-
-
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
-}
-
-.flag.visible {
-  opacity: 1;
-  transform: scale(1.2);
-}
-
-#floating-text {
-  position: fixed;
-  display: none;
-  font-size: 24px;
-  color: gold;
-  font-weight: bold;
-  pointer-events: none;
-  z-index: 9999;
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    .flag.visible {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    #floating-text {
+      position: fixed;
+      display: none;
+      font-size: 24px;
+      color: gold;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <div class="viewport">
-    <div class="world" id="world">
-      <div class="ground"></div>
-      <img id="duck" src="frames/frame_00_delay-0.04s-removebg-preview.png" alt="duck" />
-    
-      <!-- Flags -->
-      <div class="flag" style="left: 2000px;">100m</div>
-      <div class="flag" style="left: 4000px;">200m</div>
-      <div class="flag" style="left: 6000px;">300m</div>
-    
+<div class="viewport">
+  <div class="world" id="world">
+    <div class="ground"></div>
+    <img id="duck" src="frames/frame_00_delay-0.04s-removebg-preview.png" alt="duck" />
     <div id="floating-text">+100m</div>
   </div>
 </div>
 
-
-  <div id="ui">
-    <div id="distance">Distance: 0.00m
-      <!-- Flags -->
-      <div class="flag" style="left: 2000px;">100m</div>
-      <div class="flag" style="left: 4000px;">200m</div>
-      <div class="flag" style="left: 6000px;">300m</div>
-    
-    <div id="floating-text">+100m</div>
-  </div>
+<div id="ui">
+  <div id="distance">Distance: 0.00m</div>
 </div>
 
+<audio id="quack-sound" src="quack.mp3" preload="auto" volume="0.5"></audio>
 
-
-  <script>
-    const duck = document.getElementById("duck");
-    const world = document.getElementById("world");
-    const distanceText = document.getElementById("distance");
-
-    const frames = [
-      "frames/frame_00_delay-0.04s-removebg-preview.png",
-      "frames/frame_01_delay-0.04s-removebg-preview.png",
-      "frames/frame_02_delay-0.05s-removebg-preview.png",
-      "frames/frame_03_delay-0.04s-removebg-preview.png",
-      "frames/frame_04_delay-0.04s-removebg-preview.png",
-      "frames/frame_05_delay-0.04s-removebg-preview.png",
-      "frames/frame_06_delay-0.04s-removebg-preview.png",
-      "frames/frame_07_delay-0.04s-removebg-preview.png",
-      "frames/frame_08_delay-0.05s-removebg-preview.png",
-      "frames/frame_09_delay-0.04s-removebg-preview.png",
-      "frames/frame_10_delay-0.04s-removebg-preview.png",
-      "frames/frame_11_delay-0.04s-removebg-preview.png"
-    ];
-
-    let isAnimating = false;
-    let distance = 0;
-    const stepMeters = 0.05;
-    const stepPixels = 10;
-    let scrollX = 0;
-
-    const supabaseUrl = "https://qsfinylcbhkoggqukkqv.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzZmlueWxjYmhrb2dncXVra3F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMzg2MDksImV4cCI6MjA2NTgxNDYwOX0.uwf_0I3wlohMLTVhskOSscJv16gleB70d6-vfHb_WqA";
-    const supa = supabase.createClient(supabaseUrl, supabaseKey);
-
-    async function handleRemoteUpdate(newDistance) {
-      distance = newDistance;
-      duck.style.left = (distance * 20) + "px";
-      updateUI();
-    }
-
-    supa.channel("silly2")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "silly2", filter: "id=eq.global-duck" }, payload => {
-        handleRemoteUpdate(payload.new.distance);
-      })
-      .subscribe();
-
-    (async () => {
-      const { data } = await supa.from("silly2").select("distance").eq("id", "global-duck").single();
-      if (data) handleRemoteUpdate(data.distance);
-    })();
-
-    function updateUI() {
-      distanceText.innerText = `Distance: ${distance.toFixed(2)}m`;
-    }
-
-    function playFullCycleAndMove() {
-      if (isAnimating) return;
-      isAnimating = true;
-
-      let i = 0;
-      const stepPerFrame = stepPixels / frames.length;
-
-      const interval = setInterval(() => {
-        duck.src = frames[i];
-        duck.style.left = (duck.offsetLeft + stepPerFrame) + "px";
-        i++;
-        if (i >= frames.length) {
-          clearInterval(interval);
-          isAnimating = false;
-          supa.from("silly2").update({ distance: supabase.increment(stepMeters) }).eq("id", "global-duck");
-          duck.src = frames[0];
-
-          if (duck.getBoundingClientRect().right >= window.innerWidth - 20) {
-            scrollX += window.innerWidth;
-            const newWorldWidth = scrollX + window.innerWidth;
-            world.style.width = newWorldWidth + "px";
-            document.querySelector(".ground").style.width = newWorldWidth + "px";
-            world.style.transform = `translateX(-${scrollX}px)`;
-            duck.style.left = (scrollX + 20) + "px";
-          }
-        }
-      }, 30);
-    }
-
-    
-document.addEventListener("click", () => {
-  const q = document.getElementById("quack-sound"); q.volume = 0.5; q.play();
-  
+<script>
   const duck = document.getElementById("duck");
-  playFullCycleAndMove();
+  const world = document.getElementById("world");
+  const distanceText = document.getElementById("distance");
 
-});
+  const frames = [
+    "frames/frame_00_delay-0.04s-removebg-preview.png",
+    "frames/frame_01_delay-0.04s-removebg-preview.png",
+    "frames/frame_02_delay-0.05s-removebg-preview.png",
+    "frames/frame_03_delay-0.04s-removebg-preview.png",
+    "frames/frame_04_delay-0.04s-removebg-preview.png",
+    "frames/frame_05_delay-0.04s-removebg-preview.png",
+    "frames/frame_06_delay-0.04s-removebg-preview.png",
+    "frames/frame_07_delay-0.04s-removebg-preview.png",
+    "frames/frame_08_delay-0.05s-removebg-preview.png",
+    "frames/frame_09_delay-0.04s-removebg-preview.png",
+    "frames/frame_10_delay-0.04s-removebg-preview.png",
+    "frames/frame_11_delay-0.04s-removebg-preview.png"
+  ];
 
-  
-const pixelsPerMeter = 20;
-let flags = new Set();
+  let isAnimating = false;
+  let distance = 0;
+  const stepMeters = 0.05;
+  const pixelsPerMeter = 20;
+  let ready = false;
 
-function createFlagAt(distanceMeters) {
-  if (flags.has(distanceMeters)) return;
-  flags.add(distanceMeters);
+  const supabaseUrl = "https://qsfinylcbhkoggqukkqv.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzZmlueWxjYmhrb2dncXVra3F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMzg2MDksImV4cCI6MjA2NTgxNDYwOX0.uwf_0I3wlohMLTVhskOSscJv16gleB70d6-vfHb_WqA";
+  const supa = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-  const flag = document.createElement("div");
-  flag.className = "flag";
-  flag.innerText = `${distanceMeters}m`;
-  flag.style.left = `${distanceMeters * pixelsPerMeter}px`;
-  document.querySelector(".world").appendChild(flag);
-}
-
-// check and generate flag during walking
-function checkAndGenerateFlag(currentDistance) {
-  const rounded = Math.floor(currentDistance);
-  if (rounded % 100 === 0) {
-    createFlagAt(rounded);
+  async function handleRemoteUpdate(newDistance) {
+    distance = newDistance;
+    syncDuckToDistance();
   }
-}
 
-function updateFlagsVisibility() {
-  const flagsOnPage = document.querySelectorAll('.flag');
-  const duckX = parseInt(duck.style.left);
-  flagsOnPage.forEach(flag => {
-    const flagX = parseInt(flag.style.left);
-    if (Math.abs(flagX - duckX) < 200) {
-      flag.classList.add("visible");
-    } else {
-      flag.classList.remove("visible");
+  supa.channel("silly2")
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "silly2", filter: "id=eq.global-duck" }, payload => {
+      handleRemoteUpdate(payload.new.distance);
+    })
+    .subscribe();
+
+  (async () => {
+    const { data } = await supa.from("silly2").select("distance").eq("id", "global-duck").single();
+    if (data) {
+      handleRemoteUpdate(data.distance);
+      ready = true;
     }
+  })();
+
+  function syncDuckToDistance() {
+    const left = distance * pixelsPerMeter;
+    const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
+    world.style.transform = `translateX(-${scrollOffset}px)`;
+    duck.style.left = (left - scrollOffset) + "px"; // ✅ 고정된 상대위치로 보정
+    updateUI();
+  }
+
+  function updateUI() {
+    distanceText.innerText = `Distance: ${distance.toFixed(2)}m`;
+  }
+
+  function playFullCycleAndMove() {
+    if (!ready || isAnimating) return;
+    isAnimating = true;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      duck.src = frames[i];
+      i++;
+      if (i >= frames.length) {
+        clearInterval(interval);
+        isAnimating = false;
+
+        distance += stepMeters;
+
+        (async () => {
+          const { error } = await supa.rpc("increment_distance", { inc: stepMeters });
+          if (error) console.error("❌ RPC failed:", error.message);
+        })();
+
+        duck.src = frames[0];
+      }
+    }, 30);
+  }
+
+  document.addEventListener("click", () => {
+    if (!ready) return;
+    document.getElementById("quack-sound").play();
+    playFullCycleAndMove();
   });
-}
-
-
-const degenQuotes = [
-  "All in $QUAK!",
-  "$QUAK to the moon!",
-  "Diamond hands $QUAK",
-  "HODL $QUAK or die tryin'",
-  "Wen $QUAK listing?",
-  "Paper hands fear $QUAK",
-  "Full Degen on $QUAK",
-  "$QUAK max bid",
-  "Next pump is $QUAK",
-  "I just bought $QUAK again",
-  "$QUAK got me rekt",
-  "$QUAK bags never sell",
-  "Snipe the $QUAK dip",
-  "$QUAK chart broke again",
-  "Giga pump $QUAK",
-  "Liquidity? Just $QUAK",
-  "$QUAK millionaires loading",
-  "Airdrop for $QUAK when?",
-  "$QUAK vibes only",
-  "Snipe, dump, repeat — $QUAK",
-  "Degen fuel = $QUAK",
-  "$QUAK is culture",
-  "Shill harder, $QUAK faster",
-  "New ATH for $QUAK",
-  "$QUAK floor swept",
-  "Alpha: it's $QUAK szn",
-  "Exit liquidity loves $QUAK",
-  "Next Pepe? Nah, $QUAK",
-  "$QUAK is life",
-  "Rebuying $QUAK like a champ",
-  "Chart god bless $QUAK",
-  "We printin’ $QUAK",
-  "$QUAK makes me whole",
-  "Imagine not holding $QUAK",
-  "$QUAK is inevitable",
-  "Diamond bags $QUAK",
-  "No utility, just $QUAK",
-  "FOMO into $QUAK complete",
-  "Minted $QUAK, never looked back",
-  "You slept on $QUAK?",
-  "Staking $QUAK in my dreams",
-  "$QUAK gang strong",
-  "$QUAK will rise again",
-  "Flippening starts with $QUAK",
-  "$QUAK changed my life",
-  "$QUAK memes pay rent",
-  "$QUAK whales lurking",
-  "I breathe $QUAK",
-  "Meme first, $QUAK forever",
-  "$QUAK bottom confirmed?",
-  "$QUAK liquidity attack",
-  "$QUAK go up",
-  "$QUAK, but coded in hope",
-  "Degens only love $QUAK",
-  "Dev left? Still holding $QUAK",
-  "Don’t fade $QUAK",
-  "$QUAK = freedom",
-  "Buying $QUAK for grandma",
-  "Who needs sleep when it’s $QUAK o’clock?",
-  "WAGMI with $QUAK",
-  "Bag check: 100% $QUAK",
-  "Nothing left but $QUAK",
-  "$QUAK degen deluxe",
-  "Burn the chart, it’s $QUAK time",
-  "I study $QUAK patterns now",
-  "$QUAK is my personality",
-  "$QUAK flipping ETH when?",
-  "Lost my house, kept my $QUAK",
-  "Even my dog holds $QUAK",
-  "$QUAK pump confirmed",
-  "$QUAK makes it all worth it",
-  "Reality is optional with $QUAK",
-  "$QUAK isn’t a coin, it’s a way of life",
-  "Don’t need alpha, I have $QUAK",
-  "$QUAK: trust the process",
-  "$QUAK or bust",
-  "Made it? Thank $QUAK",
-  "$QUAK doesn't sleep",
-  "Chart broken = $QUAK rising",
-  "$QUAK trades itself",
-  "$QUAK war room open",
-  "$QUAK and chill",
-  "Caffeine + $QUAK = LFG",
-  "$QUAK is hope",
-  "No roadmap, just $QUAK",
-  "$QUAK post-launch enlightenment",
-  "$QUAK is still early",
-  "$QUAK lords assemble",
-  "They faded $QUAK — mistake",
-  "$QUAK stakers don’t blink",
-  "Bought $QUAK again lol",
-  "There is no exit from $QUAK",
-  "Bag full of $QUAK",
-  "Eating ramen, holding $QUAK",
-  "$QUAK is inevitable",
-  "$QUAK will outlive us",
-  "$QUAK mind virus installed",
-  "$QUAK is the way",
-  "$QUAK cultist mode",
-  "Lurking for $QUAK entries",
-  "Printing $QUAK like mad",
-  "$QUAK = modern art",
-  "$QUAK reborn again",
-  "$QUAK fueled my divorce",
-  "2nd mortgage for $QUAK",
-  "Minted $QUAK — GG",
-  "Never selling $QUAK",
-  "$QUAK supremacy declared",
-  "Woke up and bought $QUAK",
-  "$QUAK staked and cooked",
-  "$QUAK shock incoming",
-  "$QUAK is a verb now",
-  "Rugged but reentered $QUAK",
-  "$QUAK DAO = destiny",
-  "$QUAK 10x speedrun",
-  "$QUAK fix my life",
-  "Holding $QUAK til next cycle",
-  "$QUAK death spiral or greatness",
-  "$QUAK live on stream",
-  "$QUAK alpha premium",
-  "$QUAK farms memes",
-  "$QUAK for president",
-  "Governance? Nah, just $QUAK",
-  "Gas fee? Not on $QUAK",
-  "$QUAK tattoo when?",
-  "Wake up → $QUAK",
-  "Flip leverage $QUAK",
-  "Billionaire? Not yet — but $QUAK",
-  "$QUAK copium loading",
-  "My job is $QUAK",
-  "$QUAK is generational",
-  "Charts lie, $QUAK real",
-  "$QUAK bag protector",
-  "$QUAK MVP of my portfolio",
-  "Deploying memes to $QUAK",
-  "$QUAK weekly sermon",
-  "Just another $QUAK believer",
-  "Sleep tight, dream of $QUAK",
-  "$QUAK gives me hope",
-  "$QUAK over therapy",
-  "Everything’s fine, I have $QUAK",
-  "$QUAK knows",
-  "Heard voices? It was $QUAK",
-  "$QUAK rules all",
-  "$QUAK price irrelevant",
-  "All memes lead to $QUAK",
-  "$QUAK forever loading",
-  "$QUAK whisper network",
-  "Felt cute, bought $QUAK",
-  "$QUAK says relax",
-  "$QUAK withdrawals real",
-  "Max mint on $QUAK",
-  "Only $QUAK remains",
-  "$QUAK prophecy fulfilled",
-  "Wallet: 1 — $QUAK",
-  "$QUAK you later"
-];
-
-
-function showSpeechBubble() {
-  const quote = degenQuotes[Math.floor(Math.random() * degenQuotes.length)];
-  const bubble = document.createElement("div");
-  bubble.innerText = quote;
-  bubble.style.position = "absolute";
-  bubble.style.left = duck.style.left;
-  bubble.style.bottom = "250px";
-  bubble.style.background = "white";
-  bubble.style.color = "black";
-  bubble.style.padding = "4px 8px";
-  bubble.style.borderRadius = "10px";
-  bubble.style.fontSize = "12px";
-  bubble.style.fontFamily = "monospace";
-  bubble.style.zIndex = 1000;
-  bubble.style.maxWidth = "180px";
-  bubble.style.whiteSpace = "normal";
-  bubble.style.textAlign = "center";
-  bubble.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
-  document.querySelector(".world").appendChild(bubble);
-  setTimeout(() => bubble.remove(), 2000);
-}
-
-// Hook into click
-document.addEventListener("click", () => {
-  document.getElementById("quack-sound").play();
-  if (Math.random() < 0.02) showSpeechBubble(); // ~1 in 50 chance
-  playFullCycleAndMove();
-});
 </script>
 
-
-
-
-
-
-  <audio id="quack-sound" src="quack.mp3" preload="auto" volume="0.5"></audio>
 </body>
-
 </html>
