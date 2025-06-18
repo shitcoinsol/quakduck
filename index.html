@@ -112,6 +112,7 @@
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
 <body>
@@ -170,6 +171,27 @@
     const stepPixels = 10;
     let scrollX = 0;
 
+    const supabaseUrl = "https://qsfinylcbhkoggqukkqv.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzZmlueWxjYmhrb2dncXVra3F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMzg2MDksImV4cCI6MjA2NTgxNDYwOX0.uwf_0I3wlohMLTVhskOSscJv16gleB70d6-vfHb_WqA";
+    const supa = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function handleRemoteUpdate(newDistance) {
+      distance = newDistance;
+      duck.style.left = (distance * 20) + "px";
+      updateUI();
+    }
+
+    supa.channel("duck_state")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "duck_state", filter: "id=eq.global-duck" }, payload => {
+        handleRemoteUpdate(payload.new.distance);
+      })
+      .subscribe();
+
+    (async () => {
+      const { data } = await supa.from("duck_state").select("distance").eq("id", "global-duck").single();
+      if (data) handleRemoteUpdate(data.distance);
+    })();
+
     function updateUI() {
       distanceText.innerText = `Distance: ${distance.toFixed(2)}m`;
     }
@@ -188,35 +210,7 @@
         if (i >= frames.length) {
           clearInterval(interval);
           isAnimating = false;
-          distance += stepMeters;
-          updateUI();
-          checkAndGenerateFlag(distance);
-          if (Math.floor(distance) % 100 === 0 && Math.abs(Math.round(distance * 100) % 10000) < 1) {
-            const float = document.getElementById("floating-text");
-            float.innerText = `+${Math.floor(distance)}m`;
-            float.style.left = duck.style.left;
-            float.style.top = "180px";
-            float.style.display = "block";
-            float.style.opacity = 1;
-            float.style.transition = "transform 0.5s ease, opacity 0.5s ease";
-            float.style.transform = "translateY(-20px)";
-            setTimeout(() => { float.style.opacity = 0; }, 400);
-            setTimeout(() => { float.style.display = "none"; }, 700);
-          }
-          updateFlagsVisibility();
-          checkAndGenerateFlag(distance);
-          if (Math.floor(distance) % 100 === 0 && Math.abs(Math.round(distance * 100) % 10000) < 1) {
-            const float = document.getElementById("floating-text");
-            float.innerText = `+${Math.floor(distance)}m`;
-            float.style.left = duck.style.left;
-            float.style.top = "180px";
-            float.style.display = "block";
-            float.style.opacity = 1;
-            float.style.transition = "transform 0.5s ease, opacity 0.5s ease";
-            float.style.transform = "translateY(-20px)";
-            setTimeout(() => { float.style.opacity = 0; }, 400);
-            setTimeout(() => { float.style.display = "none"; }, 700);
-          }
+          supa.from("duck_state").update({ distance: supabase.increment(stepMeters) }).eq("id", "global-duck");
           duck.src = frames[0];
 
           if (duck.getBoundingClientRect().right >= window.innerWidth - 20) {
@@ -278,162 +272,162 @@ function updateFlagsVisibility() {
 
 
 const degenQuotes = [
-  "All in $SILLY!",
-  "$SILLY to the moon!",
-  "Diamond hands $SILLY",
-  "HODL $SILLY or die tryin'",
-  "Wen $SILLY listing?",
-  "Paper hands fear $SILLY",
-  "Full Degen on $SILLY",
-  "$SILLY max bid",
-  "Next pump is $SILLY",
-  "I just bought $SILLY again",
-  "$SILLY got me rekt",
-  "$SILLY bags never sell",
-  "Snipe the $SILLY dip",
-  "$SILLY chart broke again",
-  "Giga pump $SILLY",
-  "Liquidity? Just $SILLY",
-  "$SILLY millionaires loading",
-  "Airdrop for $SILLY when?",
-  "$SILLY vibes only",
-  "Snipe, dump, repeat — $SILLY",
-  "Degen fuel = $SILLY",
-  "$SILLY is culture",
-  "Shill harder, $SILLY faster",
-  "New ATH for $SILLY",
-  "$SILLY floor swept",
-  "Alpha: it's $SILLY szn",
-  "Exit liquidity loves $SILLY",
-  "Next Pepe? Nah, $SILLY",
-  "$SILLY is life",
-  "Rebuying $SILLY like a champ",
-  "Chart god bless $SILLY",
-  "We printin’ $SILLY",
-  "$SILLY makes me whole",
-  "Imagine not holding $SILLY",
-  "$SILLY is inevitable",
-  "Diamond bags $SILLY",
-  "No utility, just $SILLY",
-  "FOMO into $SILLY complete",
-  "Minted $SILLY, never looked back",
-  "You slept on $SILLY?",
-  "Staking $SILLY in my dreams",
-  "$SILLY gang strong",
-  "$SILLY will rise again",
-  "Flippening starts with $SILLY",
-  "$SILLY changed my life",
-  "$SILLY memes pay rent",
-  "$SILLY whales lurking",
-  "I breathe $SILLY",
-  "Meme first, $SILLY forever",
-  "$SILLY bottom confirmed?",
-  "$SILLY liquidity attack",
-  "$SILLY go up",
-  "$SILLY, but coded in hope",
-  "Degens only love $SILLY",
-  "Dev left? Still holding $SILLY",
-  "Don’t fade $SILLY",
-  "$SILLY = freedom",
-  "Buying $SILLY for grandma",
-  "Who needs sleep when it’s $SILLY o’clock?",
-  "WAGMI with $SILLY",
-  "Bag check: 100% $SILLY",
-  "Nothing left but $SILLY",
-  "$SILLY degen deluxe",
-  "Burn the chart, it’s $SILLY time",
-  "I study $SILLY patterns now",
-  "$SILLY is my personality",
-  "$SILLY flipping ETH when?",
-  "Lost my house, kept my $SILLY",
-  "Even my dog holds $SILLY",
-  "$SILLY pump confirmed",
-  "$SILLY makes it all worth it",
-  "Reality is optional with $SILLY",
-  "$SILLY isn’t a coin, it’s a way of life",
-  "Don’t need alpha, I have $SILLY",
-  "$SILLY: trust the process",
-  "$SILLY or bust",
-  "Made it? Thank $SILLY",
-  "$SILLY doesn't sleep",
-  "Chart broken = $SILLY rising",
-  "$SILLY trades itself",
-  "$SILLY war room open",
-  "$SILLY and chill",
-  "Caffeine + $SILLY = LFG",
-  "$SILLY is hope",
-  "No roadmap, just $SILLY",
-  "$SILLY post-launch enlightenment",
-  "$SILLY is still early",
-  "$SILLY lords assemble",
-  "They faded $SILLY — mistake",
-  "$SILLY stakers don’t blink",
-  "Bought $SILLY again lol",
-  "There is no exit from $SILLY",
-  "Bag full of $SILLY",
-  "Eating ramen, holding $SILLY",
-  "$SILLY is inevitable",
-  "$SILLY will outlive us",
-  "$SILLY mind virus installed",
-  "$SILLY is the way",
-  "$SILLY cultist mode",
-  "Lurking for $SILLY entries",
-  "Printing $SILLY like mad",
-  "$SILLY = modern art",
-  "$SILLY reborn again",
-  "$SILLY fueled my divorce",
-  "2nd mortgage for $SILLY",
-  "Minted $SILLY — GG",
-  "Never selling $SILLY",
-  "$SILLY supremacy declared",
-  "Woke up and bought $SILLY",
-  "$SILLY staked and cooked",
-  "$SILLY shock incoming",
-  "$SILLY is a verb now",
-  "Rugged but reentered $SILLY",
-  "$SILLY DAO = destiny",
-  "$SILLY 10x speedrun",
-  "$SILLY fix my life",
-  "Holding $SILLY til next cycle",
-  "$SILLY death spiral or greatness",
-  "$SILLY live on stream",
-  "$SILLY alpha premium",
-  "$SILLY farms memes",
-  "$SILLY for president",
-  "Governance? Nah, just $SILLY",
-  "Gas fee? Not on $SILLY",
-  "$SILLY tattoo when?",
-  "Wake up → $SILLY",
-  "Flip leverage $SILLY",
-  "Billionaire? Not yet — but $SILLY",
-  "$SILLY copium loading",
-  "My job is $SILLY",
-  "$SILLY is generational",
-  "Charts lie, $SILLY real",
-  "$SILLY bag protector",
-  "$SILLY MVP of my portfolio",
-  "Deploying memes to $SILLY",
-  "$SILLY weekly sermon",
-  "Just another $SILLY believer",
-  "Sleep tight, dream of $SILLY",
-  "$SILLY gives me hope",
-  "$SILLY over therapy",
-  "Everything’s fine, I have $SILLY",
-  "$SILLY knows",
-  "Heard voices? It was $SILLY",
-  "$SILLY rules all",
-  "$SILLY price irrelevant",
-  "All memes lead to $SILLY",
-  "$SILLY forever loading",
-  "$SILLY whisper network",
-  "Felt cute, bought $SILLY",
-  "$SILLY says relax",
-  "$SILLY withdrawals real",
-  "Max mint on $SILLY",
-  "Only $SILLY remains",
-  "$SILLY prophecy fulfilled",
-  "Wallet: 1 — $SILLY",
-  "$SILLY you later"
+  "All in $QUAK!",
+  "$QUAK to the moon!",
+  "Diamond hands $QUAK",
+  "HODL $QUAK or die tryin'",
+  "Wen $QUAK listing?",
+  "Paper hands fear $QUAK",
+  "Full Degen on $QUAK",
+  "$QUAK max bid",
+  "Next pump is $QUAK",
+  "I just bought $QUAK again",
+  "$QUAK got me rekt",
+  "$QUAK bags never sell",
+  "Snipe the $QUAK dip",
+  "$QUAK chart broke again",
+  "Giga pump $QUAK",
+  "Liquidity? Just $QUAK",
+  "$QUAK millionaires loading",
+  "Airdrop for $QUAK when?",
+  "$QUAK vibes only",
+  "Snipe, dump, repeat — $QUAK",
+  "Degen fuel = $QUAK",
+  "$QUAK is culture",
+  "Shill harder, $QUAK faster",
+  "New ATH for $QUAK",
+  "$QUAK floor swept",
+  "Alpha: it's $QUAK szn",
+  "Exit liquidity loves $QUAK",
+  "Next Pepe? Nah, $QUAK",
+  "$QUAK is life",
+  "Rebuying $QUAK like a champ",
+  "Chart god bless $QUAK",
+  "We printin’ $QUAK",
+  "$QUAK makes me whole",
+  "Imagine not holding $QUAK",
+  "$QUAK is inevitable",
+  "Diamond bags $QUAK",
+  "No utility, just $QUAK",
+  "FOMO into $QUAK complete",
+  "Minted $QUAK, never looked back",
+  "You slept on $QUAK?",
+  "Staking $QUAK in my dreams",
+  "$QUAK gang strong",
+  "$QUAK will rise again",
+  "Flippening starts with $QUAK",
+  "$QUAK changed my life",
+  "$QUAK memes pay rent",
+  "$QUAK whales lurking",
+  "I breathe $QUAK",
+  "Meme first, $QUAK forever",
+  "$QUAK bottom confirmed?",
+  "$QUAK liquidity attack",
+  "$QUAK go up",
+  "$QUAK, but coded in hope",
+  "Degens only love $QUAK",
+  "Dev left? Still holding $QUAK",
+  "Don’t fade $QUAK",
+  "$QUAK = freedom",
+  "Buying $QUAK for grandma",
+  "Who needs sleep when it’s $QUAK o’clock?",
+  "WAGMI with $QUAK",
+  "Bag check: 100% $QUAK",
+  "Nothing left but $QUAK",
+  "$QUAK degen deluxe",
+  "Burn the chart, it’s $QUAK time",
+  "I study $QUAK patterns now",
+  "$QUAK is my personality",
+  "$QUAK flipping ETH when?",
+  "Lost my house, kept my $QUAK",
+  "Even my dog holds $QUAK",
+  "$QUAK pump confirmed",
+  "$QUAK makes it all worth it",
+  "Reality is optional with $QUAK",
+  "$QUAK isn’t a coin, it’s a way of life",
+  "Don’t need alpha, I have $QUAK",
+  "$QUAK: trust the process",
+  "$QUAK or bust",
+  "Made it? Thank $QUAK",
+  "$QUAK doesn't sleep",
+  "Chart broken = $QUAK rising",
+  "$QUAK trades itself",
+  "$QUAK war room open",
+  "$QUAK and chill",
+  "Caffeine + $QUAK = LFG",
+  "$QUAK is hope",
+  "No roadmap, just $QUAK",
+  "$QUAK post-launch enlightenment",
+  "$QUAK is still early",
+  "$QUAK lords assemble",
+  "They faded $QUAK — mistake",
+  "$QUAK stakers don’t blink",
+  "Bought $QUAK again lol",
+  "There is no exit from $QUAK",
+  "Bag full of $QUAK",
+  "Eating ramen, holding $QUAK",
+  "$QUAK is inevitable",
+  "$QUAK will outlive us",
+  "$QUAK mind virus installed",
+  "$QUAK is the way",
+  "$QUAK cultist mode",
+  "Lurking for $QUAK entries",
+  "Printing $QUAK like mad",
+  "$QUAK = modern art",
+  "$QUAK reborn again",
+  "$QUAK fueled my divorce",
+  "2nd mortgage for $QUAK",
+  "Minted $QUAK — GG",
+  "Never selling $QUAK",
+  "$QUAK supremacy declared",
+  "Woke up and bought $QUAK",
+  "$QUAK staked and cooked",
+  "$QUAK shock incoming",
+  "$QUAK is a verb now",
+  "Rugged but reentered $QUAK",
+  "$QUAK DAO = destiny",
+  "$QUAK 10x speedrun",
+  "$QUAK fix my life",
+  "Holding $QUAK til next cycle",
+  "$QUAK death spiral or greatness",
+  "$QUAK live on stream",
+  "$QUAK alpha premium",
+  "$QUAK farms memes",
+  "$QUAK for president",
+  "Governance? Nah, just $QUAK",
+  "Gas fee? Not on $QUAK",
+  "$QUAK tattoo when?",
+  "Wake up → $QUAK",
+  "Flip leverage $QUAK",
+  "Billionaire? Not yet — but $QUAK",
+  "$QUAK copium loading",
+  "My job is $QUAK",
+  "$QUAK is generational",
+  "Charts lie, $QUAK real",
+  "$QUAK bag protector",
+  "$QUAK MVP of my portfolio",
+  "Deploying memes to $QUAK",
+  "$QUAK weekly sermon",
+  "Just another $QUAK believer",
+  "Sleep tight, dream of $QUAK",
+  "$QUAK gives me hope",
+  "$QUAK over therapy",
+  "Everything’s fine, I have $QUAK",
+  "$QUAK knows",
+  "Heard voices? It was $QUAK",
+  "$QUAK rules all",
+  "$QUAK price irrelevant",
+  "All memes lead to $QUAK",
+  "$QUAK forever loading",
+  "$QUAK whisper network",
+  "Felt cute, bought $QUAK",
+  "$QUAK says relax",
+  "$QUAK withdrawals real",
+  "Max mint on $QUAK",
+  "Only $QUAK remains",
+  "$QUAK prophecy fulfilled",
+  "Wallet: 1 — $QUAK",
+  "$QUAK you later"
 ];
 
 
