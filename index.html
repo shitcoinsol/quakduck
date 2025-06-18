@@ -9,6 +9,7 @@
       background: linear-gradient(to top, #f7d488, #fceabb);
       overflow: hidden;
     }
+
     .viewport {
       position: fixed;
       bottom: 0;
@@ -18,11 +19,13 @@
       overflow: hidden;
       position: relative;
     }
+
     .world {
       height: 100%;
       position: relative;
       transition: transform 0.5s ease;
     }
+
     .ground {
       position: fixed;
       bottom: 0;
@@ -31,6 +34,7 @@
       background: url('ground_tile.png') repeat-x;
       background-size: contain;
     }
+
     #duck {
       position: absolute;
       bottom: 100px;
@@ -38,6 +42,7 @@
       image-rendering: pixelated;
       transition: transform 0.3s ease;
     }
+
     #ui {
       position: fixed;
       top: 10px;
@@ -47,6 +52,11 @@
       font-size: 16px;
       z-index: 10;
     }
+#distance {
+  color: black;
+  font-size: 50px;
+  font-weight: bold;
+}
     .flag {
       opacity: 0;
       transform: scale(0.6);
@@ -65,10 +75,12 @@
       position: absolute;
       border-radius: 5px;
     }
+
     .flag.visible {
       opacity: 1;
       transform: scale(1.2);
     }
+
     #floating-text {
       position: fixed;
       display: none;
@@ -78,10 +90,68 @@
       pointer-events: none;
       z-index: 9999;
     }
+
+    .logo-frame {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 6px solid white;
+      overflow: hidden;
+      z-index: 1000;
+      background: white;
+    }
+
+    .logo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .button-row {
+      position: fixed;
+      top: 190px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      z-index: 1000;
+    }
+
+    .button-row a {
+      background-color: #ffffff;
+      color: #000;
+      font-family: monospace;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: 2px solid #000;
+      font-size: 14px;
+      min-width: 140px;
+      text-align: center;
+      transition: background 0.2s ease;
+    }
+
+    .button-row a:hover {
+      background: #f0f0f0;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<!-- 🔥 상단 원형 프레임 + 버튼 -->
+<div class="logo-frame">
+  <img src="122121.gif" alt="logo" />
+</div>
+<div class="button-row">
+  <a href="https://x.com" target="_blank">Join Community</a>
+  <a href="https://pump.fun" target="_blank">BUY QUAK</a>
+</div>
 
 <div class="viewport">
   <div class="world" id="world">
@@ -128,12 +198,15 @@
   const supa = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   async function handleRemoteUpdate(newDistance) {
-    distance = newDistance;
+    distance = parseFloat(newDistance);
     syncDuckToDistance();
+    updateUI(); // ✅ 실시간 갱신 반영
   }
 
   supa.channel("silly2")
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "silly2", filter: "id=eq.global-duck" }, payload => {
+    .on("postgres_changes", {
+      event: "UPDATE", schema: "public", table: "silly2", filter: "id=eq.global-duck"
+    }, payload => {
       handleRemoteUpdate(payload.new.distance);
     })
     .subscribe();
@@ -150,8 +223,7 @@
     const left = distance * pixelsPerMeter;
     const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
     world.style.transform = `translateX(-${scrollOffset}px)`;
-    duck.style.transform = `translateX(${left - scrollOffset}px)`; // 🔥 핵심 수정
-    updateUI();
+    duck.style.transform = `translateX(${left - scrollOffset}px)`;
   }
 
   function updateUI() {
@@ -169,8 +241,6 @@
       if (i >= frames.length) {
         clearInterval(interval);
         isAnimating = false;
-
-        distance += stepMeters;
 
         (async () => {
           const { error } = await supa.rpc("increment_distance", { inc: stepMeters });
