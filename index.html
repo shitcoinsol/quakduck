@@ -149,7 +149,7 @@
     const left = distance * pixelsPerMeter;
     const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
     world.style.transform = `translateX(-${scrollOffset}px)`;
-    duck.style.left = (left - scrollOffset) + "px"; // ✅ 고정된 상대위치로 보정
+    duck.style.left = (distance * pixelsPerMeter - scrollOffset) + "px";
     updateUI();
   }
 
