@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Scrolling Duck World</title>
   <style>
     body {
       margin: 0;
       background: linear-gradient(to top, #f7d488, #fceabb);
       overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      touch-action: manipulation;
+      font-size: 16px;
     }
 
     .viewport {
@@ -22,6 +27,7 @@
 
     .world {
       height: 100%;
+      width: 100vw;
       position: relative;
       transition: transform 0.5s ease;
     }
@@ -67,7 +73,7 @@
       background: red;
       color: white;
       border: 2px solid red;
-      font-size: 12px;
+      font-size: 14px;
       font-family: monospace;
       text-align: center;
       padding-top: 15px;
@@ -138,6 +144,27 @@
 
     .button-row a:hover {
       background: #f0f0f0;
+    }
+
+    @media (max-width: 480px) {
+      .logo-frame {
+        top: 20px;
+        width: 100px;
+        height: 100px;
+      }
+      .button-row {
+        top: 130px;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .button-row a {
+        padding: 8px 16px;
+        font-size: 14px;
+        min-width: 120px;
+      }
+      #ui {
+        font-size: 14px;
+      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
