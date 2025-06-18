@@ -36,6 +36,7 @@
       bottom: 100px;
       width: 100px;
       image-rendering: pixelated;
+      transition: transform 0.3s ease;
     }
     #ui {
       position: fixed;
@@ -149,7 +150,7 @@
     const left = distance * pixelsPerMeter;
     const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
     world.style.transform = `translateX(-${scrollOffset}px)`;
-    duck.style.left = (distance * pixelsPerMeter - scrollOffset) + "px";
+    duck.style.transform = `translateX(${left - scrollOffset}px)`; // 🔥 핵심 수정
     updateUI();
   }
 
