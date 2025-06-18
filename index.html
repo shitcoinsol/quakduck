@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Scrolling Duck World</title>
+  <title>Click Quak Duck</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     body {
@@ -233,7 +233,7 @@
   function syncDuckToDistance() {
     const left = distance * pixelsPerMeter;
     const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
-    world.style.width = Math.max(world.offsetWidth, left + window.innerWidth) + "px";
+    world.style.width = Math.max(world.offsetWidth, left + window.innerWidth) + "px"; // ✅ 확장
     world.style.transform = `translateX(-${scrollOffset}px)`;
     duck.style.left = (left - scrollOffset) + "px"; // ✅ 고정 좌표 사용
   }
