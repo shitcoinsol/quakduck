@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="favicon.ico" href="favicon.png">
+  <link rel="icon" type="ico" href="favicon.ico">
   <meta charset="UTF-8">
-  <title>Click Quak Duck</title>
+  <title>Scrolling Duck World</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     body {
@@ -43,6 +43,11 @@
       width: 100px;
       image-rendering: pixelated;
       transition: transform 0.3s ease;
+    }
+    @media screen and (min-width: 768px) {
+      #duck {
+        bottom: 50px;
+      }
     }
 
     #ui {
@@ -151,12 +156,12 @@
         font-size: 20px;
       }
     }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- 🔥 상단 원형 프레임 + 버튼 -->
 <div class="logo-frame">
   <img src="122121.gif" alt="logo" />
 </div>
@@ -234,25 +239,35 @@
   function syncDuckToDistance() {
     const left = distance * pixelsPerMeter;
     const scrollOffset = Math.max(0, left - window.innerWidth / 2 + 50);
-    world.style.width = Math.max(world.offsetWidth, left + window.innerWidth) + "px"; // ✅ 확장
+    world.style.width = Math.max(left + 200, window.innerWidth * 2) + "px";
     world.style.transform = `translateX(-${scrollOffset}px)`;
-    duck.style.left = (left - scrollOffset) + "px"; // ✅ 고정 좌표 사용
+    duck.style.left = (left - scrollOffset) + "px";
   }
 
   function updateUI() {
     distanceText.innerText = `Distance: ${distance.toFixed(2)}m`;
   }
 
+  // ✅ requestAnimationFrame 기반으로 수정
   function playFullCycleAndMove() {
     if (!ready || isAnimating) return;
     isAnimating = true;
 
     let i = 0;
-    const interval = setInterval(() => {
-      duck.src = frames[i];
-      i++;
-      if (i >= frames.length) {
-        clearInterval(interval);
+    const frameCount = frames.length;
+    const frameDuration = 30;
+    let lastFrameTime = performance.now();
+
+    function step(now) {
+      if (now - lastFrameTime >= frameDuration) {
+        duck.src = frames[i];
+        i++;
+        lastFrameTime = now;
+      }
+
+      if (i < frameCount) {
+        requestAnimationFrame(step);
+      } else {
         isAnimating = false;
 
         (async () => {
@@ -262,7 +277,9 @@
 
         duck.src = frames[0];
       }
-    }, 30);
+    }
+
+    requestAnimationFrame(step);
   }
 
   document.addEventListener("click", () => {
